@@ -1,14 +1,21 @@
 import express from "express";
-import { PlaceController } from "../controllers/placeController.js";
+import {
+  createPlace,
+  deletePlace,
+  getPlace,
+  getPlaces,
+  updatePlace,
+} from "../controllers/placeController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
 // Protected routes
-router.post("/", authMiddleware, PlaceController.createPlace);
-router.get("/", authMiddleware, PlaceController.getPlaces);
-router.get("/:id", authMiddleware, PlaceController.getPlace);
-router.put("/:id", authMiddleware, PlaceController.updatePlace);
-router.delete("/:id", authMiddleware, PlaceController.deletePlace);
+router.post("/", upload.array("photos", 5), authMiddleware, createPlace);
+router.get("/", authMiddleware, getPlaces);
+router.get("/:id", authMiddleware, getPlace);
+router.put("/:id", authMiddleware, updatePlace);
+router.delete("/:id", authMiddleware, deletePlace);
 
 export default router;

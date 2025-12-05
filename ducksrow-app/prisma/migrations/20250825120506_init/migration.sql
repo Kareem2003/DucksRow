@@ -1,28 +1,19 @@
-/*
-  Warnings:
-
-  - The primary key for the `User` table will be changed. If it partially fails, the table could be left without primary key constraint.
-  - You are about to drop the column `name` on the `User` table. All the data in the column will be lost.
-  - Added the required column `fullName` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `passwordHash` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `updatedAt` to the `User` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- CreateEnum
 CREATE TYPE "public"."PriceLevel" AS ENUM ('low', 'medium', 'high', 'premium');
 
--- AlterTable
-ALTER TABLE "public"."User" DROP CONSTRAINT "User_pkey",
-DROP COLUMN "name",
-ADD COLUMN     "avatarUrl" TEXT,
-ADD COLUMN     "fullName" TEXT NOT NULL,
-ADD COLUMN     "homeCity" TEXT,
-ADD COLUMN     "passwordHash" TEXT NOT NULL,
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL,
-ALTER COLUMN "id" DROP DEFAULT,
-ALTER COLUMN "id" SET DATA TYPE TEXT,
-ADD CONSTRAINT "User_pkey" PRIMARY KEY ("id");
-DROP SEQUENCE "User_id_seq";
+-- CreateTable
+CREATE TABLE "public"."User" (
+    "id" TEXT NOT NULL,
+    "fullName" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "passwordHash" TEXT NOT NULL,
+    "avatarUrl" TEXT,
+    "homeCity" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "public"."AuthProvider" (
@@ -58,6 +49,22 @@ CREATE TABLE "public"."Place" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Place_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Plan" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "city" TEXT,
+    "startAt" TIMESTAMP(3),
+    "budgetTotal" INTEGER,
+    "groupSize" INTEGER,
+    "isPublic" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Plan_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -124,36 +131,6 @@ CREATE TABLE "public"."Favorite" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."Plan" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
-    "city" TEXT,
-    "startAt" TIMESTAMP(3),
-    "budgetTotal" INTEGER,
-    "groupSize" INTEGER,
-    "isPublic" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Plan_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."PlanItem" (
-    "id" TEXT NOT NULL,
-    "planId" TEXT NOT NULL,
-    "placeId" TEXT NOT NULL,
-    "orderIndex" INTEGER NOT NULL,
-    "expectedCostPP" INTEGER,
-    "expectedDuration" TEXT,
-    "arrivalTime" TIMESTAMP(3),
-    "notes" TEXT,
-
-    CONSTRAINT "PlanItem_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "public"."RecommendationRun" (
     "id" TEXT NOT NULL,
     "userId" TEXT,
@@ -164,6 +141,17 @@ CREATE TABLE "public"."RecommendationRun" (
     CONSTRAINT "RecommendationRun_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "public"."_PlacePlans" (
+    "A" TEXT NOT NULL,
+    "B" TEXT NOT NULL,
+
+    CONSTRAINT "_PlacePlans_AB_pkey" PRIMARY KEY ("A","B")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "public"."User"("email");
+
 -- CreateIndex
 CREATE UNIQUE INDEX "AuthProvider_provider_providerUid_key" ON "public"."AuthProvider"("provider", "providerUid");
 
@@ -173,8 +161,14 @@ CREATE UNIQUE INDEX "Category_slug_key" ON "public"."Category"("slug");
 -- CreateIndex
 CREATE UNIQUE INDEX "Review_userId_placeId_key" ON "public"."Review"("userId", "placeId");
 
+-- CreateIndex
+CREATE INDEX "_PlacePlans_B_index" ON "public"."_PlacePlans"("B");
+
 -- AddForeignKey
 ALTER TABLE "public"."AuthProvider" ADD CONSTRAINT "AuthProvider_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Plan" ADD CONSTRAINT "Plan_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."PlacePhoto" ADD CONSTRAINT "PlacePhoto_placeId_fkey" FOREIGN KEY ("placeId") REFERENCES "public"."Place"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -201,13 +195,10 @@ ALTER TABLE "public"."Favorite" ADD CONSTRAINT "Favorite_userId_fkey" FOREIGN KE
 ALTER TABLE "public"."Favorite" ADD CONSTRAINT "Favorite_placeId_fkey" FOREIGN KEY ("placeId") REFERENCES "public"."Place"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Plan" ADD CONSTRAINT "Plan_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."PlanItem" ADD CONSTRAINT "PlanItem_planId_fkey" FOREIGN KEY ("planId") REFERENCES "public"."Plan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."PlanItem" ADD CONSTRAINT "PlanItem_placeId_fkey" FOREIGN KEY ("placeId") REFERENCES "public"."Place"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "public"."RecommendationRun" ADD CONSTRAINT "RecommendationRun_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_PlacePlans" ADD CONSTRAINT "_PlacePlans_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."Place"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_PlacePlans" ADD CONSTRAINT "_PlacePlans_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."Plan"("id") ON DELETE CASCADE ON UPDATE CASCADE;

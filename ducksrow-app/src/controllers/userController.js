@@ -1,11 +1,9 @@
-// src/controllers/userController.js
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import prisma from "../models/prisma.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 
-// 🟢 Signup
 export const signup = async (req, res) => {
   try {
     const { fullName, email, password, provider, providerUid } = req.body;
@@ -42,7 +40,6 @@ export const signup = async (req, res) => {
   }
 };
 
-// 🟢 Login
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -68,7 +65,6 @@ export const login = async (req, res) => {
   }
 };
 
-// 🟢 Get current user
 export const getCurrentUser = async (req, res) => {
   try {
     if (!req.user) {
