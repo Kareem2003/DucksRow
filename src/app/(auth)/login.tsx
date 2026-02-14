@@ -1,23 +1,41 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../store/useThemeStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
+import { LanguageToggle } from '../../components/ui/LanguageToggle';
+import { authService } from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 
 export default function LoginScreen() {
     const router = useRouter();
     const { colors } = useThemeStore();
+    const { t } = useLanguageStore();
+    const { showToast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
+        if (!email || !password) {
+            showToast(t('login_error_empty'), 'error');
+            return;
+        }
+
         setIsLoading(true);
-        // Simulate fake network request
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            await authService.login({ email, password });
+            showToast(t('login_success'), 'success');
             router.replace('/(tabs)/home');
-        }, 1000);
+        } catch (error: any) {
+            showToast(error.message || t('login_error_generic'), 'error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -26,67 +44,93 @@ export default function LoginScreen() {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardView}
             >
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={colors.text} />
-                </TouchableOpacity>
+                <ScrollView
+                    contentContainerStyle={{ flexGrow: 1 }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    {/* <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                        <Ionicons name="arrow-back" size={24} color={colors.text} />
+                    </TouchableOpacity> */}
 
-                <View style={styles.header}>
-                    <Text style={[styles.title, { color: colors.text }]}>Welcome Back</Text>
-                    <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                        Sign in to continue planning your adventures.
-                    </Text>
-                </View>
+                    <View style={styles.topBar}>
+                        <LanguageToggle showLabel={true} />
+                    </View>
 
-                <View style={styles.form}>
-                    <View style={styles.inputContainer}>
-                        <Text style={[styles.label, { color: colors.text }]}>Email</Text>
-                        <TextInput
-                            style={[styles.input, {
-                                backgroundColor: colors.card,
-                                color: colors.text,
-                                borderColor: colors.border
-                            }]}
-                            placeholder="user@example.com"
-                            placeholderTextColor={colors.textSecondary}
-                            keyboardType="email-address"
-                            autoCapitalize="none"
+                    <View style={styles.header}>
+                        <Text style={[styles.title, { color: colors.text }]}>{t('login_title')}</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                            {t('login_subtitle')}
+                        </Text>
+                    </View>
+
+                    <View style={styles.form}>
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, { color: colors.text }]}>{t('email_label')}</Text>
+                            <TextInput
+                                style={[styles.input, {
+                                    backgroundColor: colors.card,
+                                    color: colors.text,
+                                    borderColor: colors.border
+                                }]}
+                                placeholder={t('email_placeholder')}
+                                placeholderTextColor={colors.textSecondary}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                value={email}
+                                onChangeText={setEmail}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, { color: colors.text }]}>{t('password_label')}</Text>
+                            <View style={styles.passwordContainer}>
+                                <TextInput
+                                    style={[styles.input, styles.passwordInput, {
+                                        backgroundColor: colors.card,
+                                        color: colors.text,
+                                        borderColor: colors.border
+                                    }]}
+                                    placeholder={t('password_placeholder')}
+                                    placeholderTextColor={colors.textSecondary}
+                                    secureTextEntry={!showPassword}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                />
+                                <TouchableOpacity
+                                    style={styles.eyeIcon}
+                                    onPress={() => setShowPassword(!showPassword)}
+                                >
+                                    <Ionicons
+                                        name={showPassword ? 'eye-off' : 'eye'}
+                                        size={24}
+                                        color={colors.textSecondary}
+                                    />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity style={styles.forgotPassword}>
+                            <Text style={[styles.forgotText, { color: colors.primary }]}>{t('forgot_password')}</Text>
+                        </TouchableOpacity>
+
+                        <PrimaryButton
+                            label={t('login_button')}
+                            onPress={handleLogin}
+                            loading={isLoading}
+                            style={{ marginTop: 24 }}
                         />
                     </View>
 
-                    <View style={styles.inputContainer}>
-                        <Text style={[styles.label, { color: colors.text }]}>Password</Text>
-                        <TextInput
-                            style={[styles.input, {
-                                backgroundColor: colors.card,
-                                color: colors.text,
-                                borderColor: colors.border
-                            }]}
-                            placeholder="••••••••"
-                            placeholderTextColor={colors.textSecondary}
-                            secureTextEntry
-                        />
+                    <View style={styles.footer}>
+                        <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+                            {t('no_account')}
+                        </Text>
+                        <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
+                            <Text style={[styles.linkText, { color: colors.primary }]}>{t('signup_link')}</Text>
+                        </TouchableOpacity>
                     </View>
-
-                    <TouchableOpacity style={styles.forgotPassword}>
-                        <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot Password?</Text>
-                    </TouchableOpacity>
-
-                    <PrimaryButton
-                        label="Sign In"
-                        onPress={handleLogin}
-                        loading={isLoading}
-                        style={{ marginTop: 24 }}
-                    />
-                </View>
-
-                <View style={styles.footer}>
-                    <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-                        Don't have an account?
-                    </Text>
-                    <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
-                        <Text style={[styles.linkText, { color: colors.primary }]}>Sign Up</Text>
-                    </TouchableOpacity>
-                </View>
+                </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -103,17 +147,25 @@ const styles = StyleSheet.create({
     backButton: {
         marginBottom: 20,
     },
+    topBar: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginBottom: 20,
+    },
     header: {
         marginBottom: 32,
+        gap: 10,
     },
     title: {
-        fontSize: 32,
+        fontSize: 27,
         fontWeight: 'bold',
         marginBottom: 8,
+        textAlign: 'center',
     },
     subtitle: {
         fontSize: 16,
         lineHeight: 24,
+        textAlign: 'center',
     },
     form: {
         flex: 1,
@@ -132,6 +184,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         borderWidth: 1,
         fontSize: 16,
+    },
+    passwordContainer: {
+        position: 'relative',
+    },
+    passwordInput: {
+        paddingRight: 50,
+    },
+    eyeIcon: {
+        position: 'absolute',
+        right: 16,
+        top: 14,
     },
     forgotPassword: {
         alignSelf: 'flex-end',

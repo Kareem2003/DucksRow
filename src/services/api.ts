@@ -1,6 +1,8 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { useAuthStore } from '../store/useAuthStore';
+import { LoginPayload, RegisterPayload, AuthResponse } from '../types';
 
-const BASE_URL = 'https://api.example.com'; // TO BE REPLACED
+const BASE_URL = 'http://192.168.2.1:8080';
 
 const apiClient: AxiosInstance = axios.create({
     baseURL: BASE_URL,
@@ -13,11 +15,10 @@ const apiClient: AxiosInstance = axios.create({
 // Request Interceptor
 apiClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        // You can add auth tokens here
-        // const token = await getToken();
-        // if (token) {
-        //     config.headers.Authorization = `Bearer ${token}`;
-        // }
+        const token = useAuthStore.getState().token;
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
         console.log(`[Request] ${config.method?.toUpperCase()} ${config.url}`);
         return config;
     },
@@ -33,26 +34,50 @@ apiClient.interceptors.response.use(
         return response;
     },
     (error: AxiosError) => {
-        console.error(`[Error] ${error.message}`, error.response?.data);
+        // Don't log 401 errors as errors to avoid noisy console output for expected auth failures
+        if (error.response?.status !== 401) {
+            console.error(`[Error] ${error.message}`, error.response?.data);
+        }
         return Promise.reject(handleError(error));
     }
 );
 
 const handleError = (error: AxiosError) => {
-    // Customize your error handling logic here
     if (error.response) {
-        // Server responded with a status other than 2xx
+        const data = error.response.data as any;
         return {
-            message: error.response.data || 'Something went wrong',
+            message: data?.error || data?.message || 'Something went wrong',
             status: error.response.status,
         };
     } else if (error.request) {
-        // Request was made but no response received
         return { message: 'Network error. Please try again.', status: 0 };
     } else {
-        // Something happened in setting up the request
         return { message: error.message, status: -1 };
     }
+};
+
+export const authService = {
+    login: async (payload: LoginPayload): Promise<AuthResponse> => {
+        const response = await apiClient.post<AuthResponse>('/auth/login', payload);
+        const { user, token } = response.data;
+        useAuthStore.getState().login(user, token);
+        return response.data;
+    },
+    register: async (payload: RegisterPayload): Promise<AuthResponse> => {
+        const response = await apiClient.post<AuthResponse>('/auth/register', payload);
+        const { user, token } = response.data;
+        useAuthStore.getState().login(user, token);
+        return response.data;
+    },
+    logout: async () => {
+        try {
+            await apiClient.post('/auth/logout');
+        } catch (error) {
+            console.error('Logout failed', error);
+        } finally {
+            useAuthStore.getState().logout();
+        }
+    },
 };
 
 export default apiClient;

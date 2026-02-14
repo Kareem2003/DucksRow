@@ -87,6 +87,48 @@ export const translations = {
 
         // Common
         error_sharing: "Error sharing plan",
+
+        // Auth - Login
+        login_error_empty: "Please enter both email and password.",
+        login_success: "Welcome back!",
+        login_error_generic: "An error occurred during login.",
+        login_title: "Welcome Back",
+        login_subtitle: "Sign in to continue planning your adventures.",
+        email_label: "Email",
+        email_placeholder: "user@example.com",
+        password_label: "Password",
+        password_placeholder: "••••••••",
+        forgot_password: "Forgot Password?",
+        login_button: "Sign In",
+        no_account: "Don't have an account?",
+        signup_link: "Sign Up",
+
+        // Auth - Signup
+        signup_error_empty: "Please fill in all fields.",
+        signup_success: "Account created successfully!",
+        signup_error_generic: "An error occurred during sign up.",
+        signup_title: "Create Account",
+        signup_subtitle: "Join us and start exploring the best places in town.",
+        fullname_label: "Full Name",
+        fullname_placeholder: "John Doe",
+        signup_button: "Create Account",
+        has_account: "Already have an account?",
+        login_link: "Sign In",
+
+        // Profile & Common
+        logout_success: "Logged out successfully",
+        logout_error: "Failed to log out",
+        guest_user: "Guest",
+        no_email: "No email",
+        my_reviews: "My Reviews",
+        logout_button: "Log Out",
+        version: "Version",
+        logout_alert_title: "Leaving so soon?",
+        logout_alert_message: "Are you sure you want to log out?",
+        logout_alert_confirm: "Log Out",
+        logout_alert_cancel: "Stay",
+        common_ok: "OK",
+        common_cancel: "Cancel",
     },
     ar: {
         // Tabs
@@ -176,6 +218,48 @@ export const translations = {
 
         // Common
         error_sharing: "خطأ في مشاركة الخطة",
+
+        // Auth - Login
+        login_error_empty: "الرجاء إدخال البريد الإلكتروني وكلمة المرور.",
+        login_success: "مرحباً بعودتك!",
+        login_error_generic: "حدث خطأ أثناء تسجيل الدخول.",
+        login_title: "مرحباً بعودتك",
+        login_subtitle: "سجل الدخول للمتابعة في تخطيط مغامراتك.",
+        email_label: "البريد الإلكتروني",
+        email_placeholder: "user@example.com",
+        password_label: "كلمة المرور",
+        password_placeholder: "••••••••",
+        forgot_password: "نسيت كلمة المرور؟",
+        login_button: "تسجيل الدخول",
+        no_account: "ليس لديك حساب؟",
+        signup_link: "إنشاء حساب",
+
+        // Auth - Signup
+        signup_error_empty: "الرجاء ملء جميع الحقول.",
+        signup_success: "تم إنشاء الحساب بنجاح!",
+        signup_error_generic: "حدث خطأ أثناء إنشاء الحساب.",
+        signup_title: "إنشاء حساب",
+        signup_subtitle: "انضم إلينا وابدأ في استكشاف أفضل الأماكن في المدينة.",
+        fullname_label: "الاسم الكامل",
+        fullname_placeholder: "الاسم الكامل",
+        signup_button: "إنشاء حساب",
+        has_account: "لديك حساب بالفعل؟",
+        login_link: "تسجيل الدخول",
+
+        // Profile & Common
+        logout_success: "تم تسجيل الخروج بنجاح",
+        logout_error: "فشل تسجيل الخروج",
+        guest_user: "زائر",
+        no_email: "لا يوجد بريد إلكتروني",
+        my_reviews: "مراجعاتي",
+        logout_button: "تسجيل الخروج",
+        version: "الإصدار",
+        logout_alert_title: "هل تغادر بهذه السرعة؟",
+        logout_alert_message: "هل أنت متأكد أنك تريد تسجيل الخروج؟",
+        logout_alert_confirm: "خروج",
+        logout_alert_cancel: "بقاء",
+        common_ok: "موافق",
+        common_cancel: "إلغاء",
     }
 };
 

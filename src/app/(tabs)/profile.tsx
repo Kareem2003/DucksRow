@@ -1,28 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, Switch, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '../../store/useThemeStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 import { Ionicons } from '@expo/vector-icons';
+import { authService } from '../../services/api';
+import { useToast } from '../../context/ToastContext';
+import { useAuthStore } from '../../store/useAuthStore';
+import { CustomAlert } from '../../components/ui/CustomAlert';
+import { LanguageToggle } from '../../components/ui/LanguageToggle';
 
 export default function ProfileScreen() {
     const router = useRouter();
     const { colors, mode, toggleTheme } = useThemeStore();
+    const { t } = useLanguageStore();
+    const { showToast } = useToast();
+    const { user } = useAuthStore();
+    const [logoutAlertVisible, setLogoutAlertVisible] = useState(false);
+
+    const handleLogoutPress = () => {
+        setLogoutAlertVisible(true);
+    };
+
+    const confirmLogout = async () => {
+        setLogoutAlertVisible(false);
+        try {
+            await authService.logout();
+            showToast(t('logout_success'), 'success');
+            router.replace('/(auth)/login');
+        } catch (error) {
+            showToast(t('logout_error'), 'error');
+        }
+    };
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
             <View style={styles.header}>
-                <Text style={[styles.title, { color: colors.text }]}>Profile</Text>
+                <Text style={[styles.title, { color: colors.text }]}>{t('profile_title')}</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={styles.profileHeader}>
                     <Image
-                        source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }}
+                        source={{ uri: user?.avatar_url || 'https://randomuser.me/api/portraits/men/32.jpg' }}
                         style={styles.avatar}
                     />
-                    <Text style={[styles.name, { color: colors.text }]}>Adventurer</Text>
-                    <Text style={[styles.email, { color: colors.textSecondary }]}>user@example.com</Text>
+                    <Text style={[styles.name, { color: colors.text }]}>{user?.username || t('guest_user')}</Text>
+                    <Text style={[styles.email, { color: colors.textSecondary }]}>{user?.email || t('no_email')}</Text>
                 </View>
 
                 <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -31,7 +56,7 @@ export default function ProfileScreen() {
                             <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
                                 <Ionicons name={mode === 'dark' ? 'moon' : 'sunny'} size={20} color={colors.primary} />
                             </View>
-                            <Text style={[styles.rowLabel, { color: colors.text }]}>Dark Mode</Text>
+                            <Text style={[styles.rowLabel, { color: colors.text }]}>{t('dark_mode')}</Text>
                         </View>
                         <Switch
                             value={mode === 'dark'}
@@ -43,12 +68,24 @@ export default function ProfileScreen() {
                 </View>
 
                 <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <View style={styles.row}>
+                        <View style={styles.rowLeft}>
+                            <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+                                <Ionicons name="language" size={20} color={colors.primary} />
+                            </View>
+                            <Text style={[styles.rowLabel, { color: colors.text }]}>{t('language')}</Text>
+                        </View>
+                        <LanguageToggle showLabel={true} />
+                    </View>
+                </View>
+
+                <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
                     <TouchableOpacity style={styles.row}>
                         <View style={styles.rowLeft}>
                             <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
                                 <Ionicons name="star-outline" size={20} color={colors.primary} />
                             </View>
-                            <Text style={[styles.rowLabel, { color: colors.text }]}>My Reviews</Text>
+                            <Text style={[styles.rowLabel, { color: colors.text }]}>{t('my_reviews')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                     </TouchableOpacity>
@@ -60,7 +97,7 @@ export default function ProfileScreen() {
                             <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
                                 <Ionicons name="settings-outline" size={20} color={colors.primary} />
                             </View>
-                            <Text style={[styles.rowLabel, { color: colors.text }]}>Settings</Text>
+                            <Text style={[styles.rowLabel, { color: colors.text }]}>{t('settings')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                     </TouchableOpacity>
@@ -68,13 +105,24 @@ export default function ProfileScreen() {
 
                 <TouchableOpacity
                     style={[styles.logoutButton, { borderColor: colors.danger }]}
-                    onPress={() => router.replace('/(auth)/login')}
+                    onPress={handleLogoutPress}
                 >
-                    <Text style={[styles.logoutText, { color: colors.danger }]}>Log Out</Text>
+                    <Text style={[styles.logoutText, { color: colors.danger }]}>{t('logout_button')}</Text>
                 </TouchableOpacity>
 
-                <Text style={[styles.version, { color: colors.textSecondary }]}>Version 1.0.0</Text>
+                <Text style={[styles.version, { color: colors.textSecondary }]}>{t('version')} 1.0.0</Text>
             </ScrollView>
+
+            <CustomAlert
+                visible={logoutAlertVisible}
+                title={t('logout_alert_title')}
+                message={t('logout_alert_message')}
+                icon={<Ionicons name="sad-outline" size={50} color={colors.text} />}
+                onConfirm={confirmLogout}
+                onCancel={() => setLogoutAlertVisible(false)}
+                confirmText={t('logout_alert_confirm')}
+                cancelText={t('logout_alert_cancel')}
+            />
         </SafeAreaView>
     );
 }

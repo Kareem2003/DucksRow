@@ -2,21 +2,29 @@ import { useEffect } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useThemeStore } from '../store/useThemeStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SplashScreen() {
     const router = useRouter();
     const { colors } = useThemeStore();
+    const { isAuthenticated, token, hasLoggedInOnce } = useAuthStore();
 
     useEffect(() => {
-        // Auto-navigate after 2 seconds for demo purposes, or user can click
-        const timer = setTimeout(() => {
-            // router.replace('/(auth)/login'); 
-            // Commented out auto-nav to let user see splash in demo
-        }, 2000);
-        return () => clearTimeout(timer);
-    }, []);
+        const checkAuth = async () => {
+            // Add a small delay for splash screen visibility or DB init
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            if (isAuthenticated && token) {
+                router.replace('/(tabs)/home');
+            } else {
+                router.replace('/(auth)/login');
+            }
+        };
+
+        checkAuth();
+    }, [isAuthenticated, token]);
 
     const handleGetStarted = () => {
         router.replace('/(auth)/login');
@@ -43,11 +51,18 @@ export default function SplashScreen() {
                 </View>
 
                 <View style={styles.footer}>
-                    <PrimaryButton
-                        label="Get Started"
-                        onPress={handleGetStarted}
-                        style={{ width: '100%' }}
-                    />
+                    {!hasLoggedInOnce ? (
+                        <PrimaryButton
+                            label="Get Started"
+                            onPress={handleGetStarted}
+                            style={{ width: '100%' }}
+                        />
+                    ) : (
+                        <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                            {/* Optional: Add a spinner or simpler loading text if desired, 
+                                but the GIF above serves as a good loading indicator already. */}
+                        </View>
+                    )}
                 </View>
             </View>
         </SafeAreaView>

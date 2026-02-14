@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import { MOCK_PLACES } from '../../data/mock';
 import { PlaceCard } from '../../components/ui/PlaceCard';
 import { PrimaryButton } from '../../components/ui/PrimaryButton';
@@ -12,6 +13,7 @@ export default function HomeScreen() {
     const router = useRouter();
     const { colors, mode } = useThemeStore();
     const { t, language, setLanguage, isRTL } = useLanguageStore();
+    const { user } = useAuthStore();
 
     const featuredPlaces = MOCK_PLACES.slice(0, 3);
     const recommendedPlaces = MOCK_PLACES.slice(2, 5);
@@ -30,7 +32,7 @@ export default function HomeScreen() {
                 <View style={[styles.header, { flexDirection }]}>
                     <View style={{ alignItems }}>
                         <Text style={[styles.greeting, { color: colors.textSecondary }]}>{t('welcome')}</Text>
-                        <Text style={[styles.username, { color: colors.text }]}>{t('explorer')} 👋</Text>
+                        <Text style={[styles.username, { color: colors.text }]}>{user?.username || t('explorer')} 👋</Text>
                     </View>
                     <TouchableOpacity onPress={toggleLanguage} style={[styles.langButton, { borderColor: colors.border }]}>
                         <Text style={[styles.langText, { color: colors.primary }]}>

@@ -83,3 +83,27 @@ export interface PlannedPayment {
     note?: string;
     created_at: string;
 }
+
+export interface User {
+    id: number;
+    email: string;
+    username?: string;
+    avatar_url?: string;
+    role?: 'admin' | 'user';
+}
+
+export interface AuthResponse {
+    token: string;
+    user: User;
+}
+
+export interface LoginPayload {
+    email: string;
+    password: string;
+}
+
+export interface RegisterPayload {
+    username: string;
+    email: string;
+    password: string;
+}
